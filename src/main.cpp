@@ -31,7 +31,7 @@ void initializeWiFi() {
     digitalWrite(LED_PIN, 0);
 
     Serial.println(WiFi.localIP());
-    if (!MDNS.begin("esp01")) {
+    if (!MDNS.begin("ir")) {
         Serial.println("Error setting up MDNS responder!");
     }
     Serial.println("mDNS responder started");
@@ -76,8 +76,6 @@ void setupTelnet() {
 void setupIR() {
     IrReceiver.begin(INPUT_PIN, false);
     IrSender.begin(LED_PIN, false, 0);
-    telnet.print("Ready to receive IR signals of protocols: ");
-    printActiveIRProtocols(&Serial);
 }
 
 void setup() {
@@ -90,7 +88,7 @@ void setup() {
     setupTelnet();
 
     setupIR();
-    Serial.println("IR receiver ready");
+    Serial.println("setup done");
 }
 
 
@@ -118,13 +116,14 @@ void loopIR() {
 
             // IrReceiver.printIRResultShort(&Serial);
             IrReceiver.printIRSendUsage(&Serial);
+            telnet.printf("received: %s a:%d c:%d\n", getProtocolString(IrReceiver.decodedIRData.protocol),
+                IrReceiver.decodedIRData.address, IrReceiver.decodedIRData.command);
         }
 
         /*
          * Finally, check the received data and perform actions according to the received command
          */
         if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
-            telnet.println(F("Repeat received. Here you can repeat the same action as before."));
         } else {
             if (IrReceiver.decodedIRData.command == 0x10) {
                 telnet.println(F("Received command 0x10."));
